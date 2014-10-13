@@ -76,4 +76,49 @@ class TestGuestBook(BaseTestWrapper):
         self.assertEqual(greetings1.count(), 0)
 
 
-    
+    def testUpdateGreeting(self):
+        """
+        update greeting content
+        """
+
+        greeting = core_model.Greeting(parent=server.guestbook_key(settings.DEFAULT_GUESTBOOK_NAME))
+        greeting.content = "test_content"
+
+        greeting.put()
+
+        response1 = self.testapp.post(
+                                '/sign', 
+                                params={'content':'updated_content', 'id':greeting.key.id()}, 
+                                expect_errors=True )
+
+        response_dict = json.loads(response1.body)
+
+        greetings = core_model.Greeting.query()
+
+        self.assertEqual(greetings.count(), 1)
+        self.assertEqual(greetings.get().content, 'updated_content')
+
+
+    def testUpdateBlankGreeting(self):
+        """
+        update blank greeting content
+        """
+
+        greeting = core_model.Greeting(parent=server.guestbook_key(settings.DEFAULT_GUESTBOOK_NAME))
+        greeting.content = "test_content"
+
+        greeting.put()
+
+        response1 = self.testapp.post(
+                                '/sign', 
+                                params={'content':'', 'id':greeting.key.id()}, 
+                                expect_errors=True )
+
+        response_dict = json.loads(response1.body)
+
+        greetings = core_model.Greeting.query()
+
+        self.assertEqual(greetings.count(), 1)
+        self.assertEqual(greetings.get().content, 'test_content')
+
+

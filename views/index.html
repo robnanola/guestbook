@@ -2,59 +2,130 @@
 
 {% block content %}
   <div id="greetings">
+    <form action="/sign" method="post" id="guestbookForm">
+      <div><textarea id="id_content" class="input-block-level" rows="3"></textarea></div>
+      <div><input id="submitGuestbook" type="button" class="btn btn-large btn-primary" value="Sign Guestbook"></div>
+    </form>
+
     {% for greeting in greetings %}
       <div class="row">
         {% if greeting.author %}
-          <b>{{ greeting.author.nickname() }}</b> wrote:
+          <b>{{greeting.author.nickname()}}</b> wrote:
         {% else %}
          An anonymous person wrote:
         {% endif %}
-        <blockquote>{{ greeting.content }}</blockquote>
+        {% if greeting.author == user%}
+          <a href="#{{greeting.key.id()}}" class="update" data-pk="{{greeting.key.id()}}"><span class="glyphicon glyphicon-pencil"></span> Update</a>
+        {%endif%}
+        <div class="greeting">
+          <blockquote class="greeting-content">{{ greeting.content }}</blockquote>
+        </div>
       </div>
     {% endfor %}
   </div>
 
-  <form action="/sign" method="post" id="guestbookForm">
-    <div><textarea id="id_content" class="input-block-level" rows="3"></textarea></div>
-    <div><input id="submitGuestbook" type="button" class="btn btn-large btn-primary" value="Sign Guestbook"></div>
-  </form>
-
   <script type="text/javascript">
+
+    $(document).on('click', '.update', function(ev){
+
+      ev.stopPropagation();
+      $('#id_content').val('');
+      $('.row').next().find('a.cancel').click();
+
+      $(this).removeClass('update').addClass('cancel').html(
+        "<span class='glyphicon glyphicon-remove'></span> Cancel"
+      );
+      var el = $(this);
+      var target = $(this).next();
+
+      target.html(
+        "<form id='testForm' action='/sign' method='post'>" +
+        "<textarea class='input-block-level inline' rows='3'>" +
+        target.find('.greeting-content').html() + 
+        "</textarea>" +
+        "<input id='id' type='hidden' value='" + el.data('pk') + "' />" +
+        "</form>"
+      );
+    });
+
+    $(document).on('click', '.cancel', function(ev){
+      
+      ev.stopPropagation();
+      $(this).removeClass('cancel').addClass('update').html(
+        "<span class='glyphicon glyphicon-pencil'></span> Update"
+      );
+      var el = $(this);
+      console.log(el);
+      var target = el.next().find('#testForm');
+
+      target.html(
+        '<blockquote class="greeting-content">' + target.find('textarea').html() + '</blockquote>' 
+      );
+    });
+
+    $(document).on('keypress', 'textarea.inline', function(ev){
+      var key = ev.which;
+      var el = $(this);
+
+      if(key == 13){
+        var form = $(this).closest("form");
+
+        if($.trim(form.find('textarea').val()).length > 1){
+          $.ajax({
+            type: form.attr('method'),
+            url: form.attr('action'),
+            data: { 
+              "content": form.find('textarea').val(), 
+              'id': form.find('input').val()
+            },
+            dataType:'json',
+            success: function (data) {
+              el.parent().parent().html(
+                '<blockquote class="greeting-content">' + data['content'] + '</blockquote>' 
+              );
+            },
+            complete: function(){
+              $('.row').find('a.cancel').click();
+            }
+          });
+        }
+      }
+    });
+
+
     $("#guestbookForm").submit(function(ev){
       ev.preventDefault();
 
       var content = $('#id_content');
+      if($.trim(content.val()).length > 1){
+        $.ajax({
+          type: $(this).attr('method'),
+          url: $(this).attr('action'),
+          data: { "content": content.val()},
+          dataType:'json',
+          success: function (data) {
 
-      $.ajax({
-        type: $(this).attr('method'),
-        url: $(this).attr('action'),
-        data: { "content": content.val()},
-        dataType:'json',
-        success: function (data) {
+            if(data['author'] == null){
+              $('div.row').after(
+                '<div class="row">' +
+                'An anonymous person wrote:' +
+                '  <blockquote>' + data['content'] + '</blockquote>' +
+                '</div>'
+              );
 
-          if(data['author'] == null){
-            $('#greetings').append(
-              '<div class="row">' +
-              'An anonymous person wrote:' +
-              '  <blockquote>' + data['content'] + '</blockquote>' +
-              '</div>'
-            );
+            }else {
+              $('div.row').before(
+                '<div class="row">' +
+                '  <b>' + data['author'] + '</b> wrote:' +
+                '  <blockquote>' + data['content'] + '</blockquote>' +
+                '</div>'
+              ); 
 
-          }else {
-            $('#greetings').append(
-              '<div class="row">' +
-              '  <b>' + data['author'] + '</b> wrote:' +
-              '  <blockquote>' + data['content'] + '</blockquote>' +
-              '</div>'
-            ); 
-
+            }
+            $('#id_content').val('');
           }
-
-          $('#id_content').val('');
-        }
-      });
-
-      
+        });  
+      }
     });
 
     $('#submitGuestbook').click(function(){

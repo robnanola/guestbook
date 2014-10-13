@@ -6,6 +6,6 @@ JINJA_ENVIRONMENT = jinja2.Environment(
     extensions=['jinja2.ext.autoescape'],
     autoescape=True)
 
-print os.path.join(os.path.dirname(__file__),'../views'),'<<<<'
-
 DEFAULT_GUESTBOOK_NAME = 'default_guestbook'
+
+APP_ID = 'your-app-id'

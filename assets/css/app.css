@@ -1,3 +1,23 @@
 .main {
     margin-top: 100px;
 }
+
+
+.starr {
+    display: inline-block; 
+}
+
+.starr i {
+    font-size: 16px;
+    padding: 0 1px;
+    cursor: pointer;
+    color: #ffd119; 
+}
+
+
+.starlet i {
+    cursor: pointer;
+    color: #ffd119; 
+}
+
+

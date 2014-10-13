@@ -1,11 +1,24 @@
 {% extends "base.html" %}
 
+{% block extra_js %}
+  <script src="/assets/js/starrr.js"></script>
+{% endblock extra_js %}
+
 {% block content %}
   <div id="greetings">
     <form action="/sign" method="post" id="guestbookForm">
-      <div><textarea id="id_content" class="input-block-level" rows="3"></textarea></div>
+      <div class="starr"></div>
+      <div>
+        <textarea id="id_content" class="input-block-level" rows="3"></textarea>
+        <input type='hidden' id="id_rating">
+      </div>
+
       <div><input id="submitGuestbook" type="button" class="btn btn-large btn-primary" value="Sign Guestbook"></div>
     </form>
+
+    <br>
+    <hr>
+
 
     {% for greeting in greetings %}
       <div class="row">
@@ -18,6 +31,7 @@
           <a href="#{{greeting.key.id()}}" class="update" data-pk="{{greeting.key.id()}}"><span class="glyphicon glyphicon-pencil"></span> Update</a>
         {%endif%}
         <div class="greeting">
+          <div class='rating-readonly' data-rating={{greeting.rating}}></div>
           <blockquote class="greeting-content">{{ greeting.content }}</blockquote>
         </div>
       </div>
@@ -37,15 +51,66 @@
       );
       var el = $(this);
       var target = $(this).next();
+      var rating = target.find('.rating-readonly').data('rating');
+
+      if(rating == undefined){
+        rating = 0;
+      }
 
       target.html(
         "<form id='testForm' action='/sign' method='post'>" +
-        "<textarea class='input-block-level inline' rows='3'>" +
+        "<div class='starlet'></div>" +
+        "<textarea id='content' class='input-block-level inline' rows='3'>" +
         target.find('.greeting-content').html() + 
         "</textarea>" +
         "<input id='id' type='hidden' value='" + el.data('pk') + "' />" +
+        "<input id='rating' type='hidden' data-prev-rating="+ rating+" value='" + rating + "' /><br>" +
+        "<button type='button' id='update-submit' class='btn btn-primary btn-xs'>Save</button><br><br>" +
         "</form>"
       );
+
+      target.find('.starlet').starrr({
+        rating: rating,
+        change: function(e, value){
+          alert(value);
+          target.find('#rating').val(value);
+        }
+      });     
+
+    });
+
+    $(document).on('click','#update-submit', function(ev){
+      var el = $(this);
+      var form = $(this).closest("form");
+
+      if($.trim(form.find('textarea').val()).length > 1){
+        $.ajax({
+          type: form.attr('method'),
+          url: form.attr('action'),
+          data: { 
+            "content": form.find('textarea').val(), 
+            "rating":form.find('#rating').val(),
+            'id': form.find('input').val()
+          },
+          dataType:'json',
+          success: function (data) {
+            var target = el.parent().parent();
+            target.html(
+              '<div class="rating-readonly" data-rating="' + data['rating'] + '"></div>' + 
+              '<blockquote class="greeting-content">' + data['content'] + '</blockquote>' 
+            );
+
+            target.find('.rating-readonly').starrr({
+              readonly:true,
+              rating:data['rating']
+            });
+          },
+          complete: function(){
+            $('.row').find('a.cancel').click();
+          }
+        });
+      }
+
     });
 
     $(document).on('click', '.cancel', function(ev){
@@ -55,12 +120,18 @@
         "<span class='glyphicon glyphicon-pencil'></span> Update"
       );
       var el = $(this);
-      console.log(el);
       var target = el.next().find('#testForm');
+      var rating = target.find('#rating').data('prev-rating');
 
       target.html(
+        '<div class="rating-readonly" data-rating="' + rating + '"></div>' + 
         '<blockquote class="greeting-content">' + target.find('textarea').html() + '</blockquote>' 
       );
+
+      target.find('.rating-readonly').starrr({
+          readonly:true,
+          rating:rating
+        });
     });
 
     $(document).on('keypress', 'textarea.inline', function(ev){
@@ -76,6 +147,7 @@
             url: form.attr('action'),
             data: { 
               "content": form.find('textarea').val(), 
+              "rating":form.find('#rating').val(),
               'id': form.find('input').val()
             },
             dataType:'json',
@@ -127,6 +199,15 @@
         });  
       }
     });
+
+    $(".starr").starrr();
+    $('.starrr').on('starrr:change', function(e, value){
+      $('#id_rating').val(value);
+    });
+
+    $(".rating-readonly").starrr(
+      {readonly:true}
+    );
 
     $('#submitGuestbook').click(function(){
       $('#guestbookForm').submit();

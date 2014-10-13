@@ -115,6 +115,10 @@ class Guestbook(BaseHandler):
 
                 if self.user:
                     greeting.author = self.user
+
+            if self.request.get('rating') or self.request.get('rating') not in  ('0',''):
+                greeting.rating = int(self.request.get('rating'))
+
             greeting.content = self.request.get('content')
             greeting.put()
 

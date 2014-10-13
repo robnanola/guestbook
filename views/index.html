@@ -1,19 +1,65 @@
 {% extends "base.html" %}
 
 {% block content %}
-  {% for greeting in greetings %}
-    <div class="row">
-      {% if greeting.author %}
-        <b>{{ greeting.author.nickname() }}</b> wrote:
-      {% else %}
-       An anonymous person wrote:
-      {% endif %}
-      <blockquote>{{ greeting.content }}</blockquote>
-    </div>
-  {% endfor %}
+  <div id="greetings">
+    {% for greeting in greetings %}
+      <div class="row">
+        {% if greeting.author %}
+          <b>{{ greeting.author.nickname() }}</b> wrote:
+        {% else %}
+         An anonymous person wrote:
+        {% endif %}
+        <blockquote>{{ greeting.content }}</blockquote>
+      </div>
+    {% endfor %}
+  </div>
 
-  <form action="/sign" method="post">
-    <div><textarea name="content" class="input-block-level" rows="3"></textarea></div>
-    <div><input type="submit" class="btn btn-large btn-primary" value="Sign Guestbook"></div>
+  <form action="/sign" method="post" id="guestbookForm">
+    <div><textarea id="id_content" class="input-block-level" rows="3"></textarea></div>
+    <div><input id="submitGuestbook" type="button" class="btn btn-large btn-primary" value="Sign Guestbook"></div>
   </form>
+
+  <script type="text/javascript">
+    $("#guestbookForm").submit(function(ev){
+      ev.preventDefault();
+
+      var content = $('#id_content');
+
+      $.ajax({
+        type: $(this).attr('method'),
+        url: $(this).attr('action'),
+        data: { "content": content.val()},
+        dataType:'json',
+        success: function (data) {
+
+          if(data['author'] == null){
+            $('#greetings').append(
+              '<div class="row">' +
+              'An anonymous person wrote:' +
+              '  <blockquote>' + data['content'] + '</blockquote>' +
+              '</div>'
+            );
+
+          }else {
+            $('#greetings').append(
+              '<div class="row">' +
+              '  <b>' + data['author'] + '</b> wrote:' +
+              '  <blockquote>' + data['content'] + '</blockquote>' +
+              '</div>'
+            ); 
+
+          }
+
+          $('#id_content').val('');
+        }
+      });
+
+      
+    });
+
+    $('#submitGuestbook').click(function(){
+      $('#guestbookForm').submit();
+    });
+
+  </script>
 {% endblock %}

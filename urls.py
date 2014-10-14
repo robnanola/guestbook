@@ -8,6 +8,7 @@ from controllers import server
 
 
 ROUTING = [
-    ('/', server.MainPage),
-    ('/sign', server.Guestbook),
+    ('/', server.MainPageHandler),
+    ('/sign', server.GuestbookHandler),
+    ('/user/([^/]+)/comments', server.UserCommentsHandler),
 ]

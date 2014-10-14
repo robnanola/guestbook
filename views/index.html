@@ -23,7 +23,7 @@
     {% for greeting in greetings %}
       <div class="row">
         {% if greeting.author %}
-          <b>{{greeting.author.nickname()}}</b> wrote:
+          <b><a href="/user/{{greeting.author}}/comments">{{greeting.author.nickname()}}</a></b> wrote:
         {% else %}
          An anonymous person wrote:
         {% endif %}
@@ -72,7 +72,6 @@
       target.find('.starlet').starrr({
         rating: rating,
         change: function(e, value){
-          alert(value);
           target.find('#rating').val(value);
         }
       });     
@@ -169,31 +168,47 @@
       ev.preventDefault();
 
       var content = $('#id_content');
+      var rating = $('#id_rating');
+
       if($.trim(content.val()).length > 1){
         $.ajax({
           type: $(this).attr('method'),
           url: $(this).attr('action'),
-          data: { "content": content.val()},
+          data: { "content": content.val(), 'rating': rating.val()},
           dataType:'json',
           success: function (data) {
 
             if(data['author'] == null){
-              $('div.row').after(
+              $('div.row').before(
                 '<div class="row">' +
                 'An anonymous person wrote:' +
-                '  <blockquote>' + data['content'] + '</blockquote>' +
+                '  <div class="rating-readonly" data-rating="' + data['rating'] + '"></div>' + 
+                '  <blockquote class="greeting-content">' + data['content'] + '</blockquote>' +
                 '</div>'
               );
 
             }else {
               $('div.row').before(
                 '<div class="row">' +
-                '  <b>' + data['author'] + '</b> wrote:' +
-                '  <blockquote>' + data['content'] + '</blockquote>' +
+                '  <b><a href="/user/' + data['author'] +'/comments">' + data['author'] + '</a></b> wrote:' +
+                '  <a href="#'+ data['id'] +'" class="update" data-pk="' + data['id'] + '">' + 
+                '  <span class="glyphicon glyphicon-pencil"></span> Update</a>' +
+                '  <div class="greeting"> ' +
+                '  <div class="rating-readonly" data-rating="' + data['rating'] + '"></div>' + 
+                '  <blockquote class="greeting-content">' + data['content'] + '</blockquote>' +
+                '  </div>' +
                 '</div>'
               ); 
-
             }
+
+            var el = $('div.row').first();
+            console.log(el);
+            console.log('--------');
+            console.log(el.find('.rating-readonly'));
+            console.log('--------');
+            
+            el.find('.rating-readonly').starrr({readonly:true
+              });
             $('#id_content').val('');
           }
         });  
@@ -201,7 +216,8 @@
     });
 
     $(".starr").starrr();
-    $('.starrr').on('starrr:change', function(e, value){
+
+    $('.starr').on('starrr:change', function(e, value){
       $('#id_rating').val(value);
     });
 

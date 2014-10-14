@@ -65,7 +65,7 @@ class BaseHandler(webapp2.RequestHandler):
 
 
 
-class MainPage(BaseHandler):
+class MainPageHandler(BaseHandler):
 
     def get(self):
         guestbook_name = self.request.get('guestbook_name',
@@ -93,7 +93,7 @@ class MainPage(BaseHandler):
         self.render_template('/index.html', context_data=template_values)
 
 
-class Guestbook(BaseHandler):
+class GuestbookHandler(BaseHandler):
 
     def post(self):
         guestbook_name = self.request.get('guestbook_name',
@@ -126,3 +126,19 @@ class Guestbook(BaseHandler):
 
         else:
             self.json_response({})
+
+
+
+class UserCommentsHandler(BaseHandler):
+
+    def get(self, email):
+
+        guestbook_name = self.request.get('guestbook_name',
+                                          settings.DEFAULT_GUESTBOOK_NAME)
+
+        user = users.User(email)
+        greetings = core_model.Greeting.query(
+                core_model.Greeting.author==user
+            ).order(-core_model.Greeting.date).fetch()
+
+        self.render_template('user/comments.html', context_data={'greetings':greetings})

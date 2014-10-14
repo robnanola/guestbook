@@ -1,4 +1,4 @@
-application: your-app-id
+application: guestbook-test-733
 version: 1
 runtime: python27
 api_version: 1
@@ -8,11 +8,17 @@ handlers:
 - url: /assets
   static_dir: assets
 
+- url: /admin/.*
+  script: guestbook.application
+  login: admin
+
 - url: /.*
   script: guestbook.application
+
 
 libraries:
 - name: webapp2
   version: latest
 - name: jinja2
   version: latest
+

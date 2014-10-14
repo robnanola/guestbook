@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+	<div class='row'>
+	    <form action="{{upload_url}}" method="post" id="hotelForm" enctype="multipart/form-data">
+
+		  <div class="form-group">
+		    <label for="hotel_file">File Upload</label>
+		    <input type="file" name="hotel_file" id='hotel_file'>
+		    <p class="help-block">Upload csv file with the ff values (Hotel Name, Address1, Address2, Contact Numbers).</p>
+		  </div>
+		  <button type="submit" class="btn btn-primary">Submit</button>
+		</form>
+	</div>
+
+	<hr>
+
+  <div class="row">
+	{% for hotel in hotels %}
+      <div class="col-xs-6 col-md-3">
+        <a href="#" class="thumbnail">
+        {{hotel.name}}
+      </a>
+      </div>
+	{% endfor %}
+  </div>
+
+{% endblock %}

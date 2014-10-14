@@ -4,3 +4,9 @@ indexes:
   properties:
   - name: date
     direction: desc
+
+- kind: Greeting
+  properties:
+  - name: hotel
+  - name: date
+    direction: desc
